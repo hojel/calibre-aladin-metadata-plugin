@@ -172,7 +172,9 @@ class Worker(Thread): # Get details
 
     def parse_isbn(self, root):
         url = root.xpath('//meta[@property="og:url"]/@content')[0]
-        return url.rsplit('/',1)[1]
+        if 'ISBN=' in url:
+            return url.rsplit('=',1)[1]
+        return None
 
     def parse_publisher(self, root):
         bgtit_node = root.xpath('//td[@class="pwrap_bgtit"][1]')[0]
@@ -205,9 +207,15 @@ class Worker(Thread): # Get details
         if urls:
         	page_url = urls[0].replace('_fs.','_f.')
 
+        if not self._is_valid_image(page_url):
+            self.log.info('Aborting parse_cover')
+            return
+
         self.plugin.cache_identifier_to_cover_url(self.isbn, page_url)
         self.relevance += 5
         return page_url
 
     def _is_valid_image(self, img_url):
+        if img_url.endswith("noimg_b.gif"):
+            return False
         return True
